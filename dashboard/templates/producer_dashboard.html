@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Producer Dashboard - Peace Tacos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .column { float: left; width: 23%; margin: 1%; padding: 10px; border: 1px solid #ccc; min-height: 400px; }
+        .order-card { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .status-placed { border-left: 4px solid orange; }
+        .status-confirmed { border-left: 4px solid blue; }
+        .status-cooking { border-left: 4px solid red; }
+        .status-ready { border-left: 4px solid green; }
+        button { padding: 5px 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🌮 Kitchen Dashboard</h1>
+    <p>Welcome, {{ request.user.username }}!</p>
+    
+    <div class="column">
+        <h2>New Orders ({{ new_orders.count }})</h2>
+        {% for order in new_orders %}
+        <div class="order-card status-placed">
+            <strong>Order #{{ order.id }}</strong><br>
+            Customer: {{ order.customer.username }}<<br>
+            Total: ${{ order.total_price }}<<br>
+            Items: {% for item in order.items.all %}{{ item.taco.name }} x{{ item.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}<<br>
+            <form method="post" action="{% url 'update_status' order.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="confirmed">
+                <button type="submit">Confirm</button>
+            </form>
+        </div>
+        {% empty %}
+        <p>No new orders</p>
+        {% endfor %}
+    </div>
+    
+    <div class="column">
+        <h2>Confirmed ({{ confirmed_orders.count }})</h2>
+        {% for order in confirmed_orders %}
+        <div class="order-card status-confirmed">
+            <strong>Order #{{ order.id }}</strong><br>
+            <form method="post" action="{% url 'update_status' order.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="cooking">
+                <button type="submit">Start Cooking</button>
+            </form>
+        </div>
+        {% empty %}
+        <p>No confirmed orders</p>
+        {% endfor %}
+    </div>
+    
+    <div class="column">
+        <h2>Cooking ({{ cooking_orders.count }})</h2>
+        {% for order in cooking_orders %}
+        <div class="order-card status-cooking">
+            <strong>Order #{{ order.id }}</strong><br>
+            <form method="post" action="{% url 'update_status' order.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="ready">
+                <button type="submit">Mark Ready</button>
+            </form>
+        </div>
+        {% empty %}
+        <p>No orders cooking</p>
+        {% endfor %}
+    </div>
+    
+    <div class="column">
+        <h2>Ready for Pickup ({{ ready_orders.count }})</h2>
+        {% for order in ready_orders %}
+        <div class="order-card status-ready">
+            <strong>Order #{{ order.id }}</strong><br>
+            <form method="post" action="{% url 'update_status' order.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="completed">
+                <button type="submit">Complete</button>
+            </form>
+        </div>
+        {% empty %}
+        <p>No orders ready</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
